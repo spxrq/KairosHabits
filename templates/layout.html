@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %}</title>
+</head>
+<body>
+    <header>
+        <h1>Kairos Habits</h1>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/login">Login</a>
+            <a href="/register">Register</a>
+        </nav>
+    </header>
+
+    <main>
+        {% block main %}
+        {% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; 2024 KairosHabits</p>
+    </footer>
+</body>
+</html>

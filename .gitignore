@@ -1,0 +1,5 @@
+# Virtual environment folder
+.venv/
+
+# Byte-compiled / optimized / compiled Python files
+__pycache__/
