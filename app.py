@@ -53,7 +53,7 @@ def login():
         # Ensure username exists and password is correct
         if user is None or not check_password_hash(user.password_hash, password):
             return apology("invalid email and/or password", 403)
-
+        
         # Remember which user has logged in
         session["user_id"] = user.id
 
@@ -117,8 +117,15 @@ def register():
         return render_template("register.html")
 
 
+@app.route("/logout")
+def logout():
+    """Log user out"""
+    session.clear()
+    return redirect("/")
+
+
 @app.route("/")
-# @login_required
+@login_required
 def index():
     if not session.get("user_id"):
         return redirect("/login")
@@ -134,3 +141,43 @@ def calculate_weeks_lived(birthdate):
     today = datetime.today().date()
     weeks_lived = (today - birthdate).days // 7
     return weeks_lived
+
+
+@app.route("/habits", methods=["GET", "POST"], endpoint='habits')
+@login_required
+def habits():
+    if request.method == "POST":
+        name = request.form.get("name")
+        description = request.form.get("description")
+
+        if not name:
+            return apology("must provide habit name", 400)
+
+        habit = Habit(name=name, description=description, user_id=session["user_id"])
+        db.session.add(habit)
+        db.session.commit()
+        return redirect("/habits")
+    else:
+        user = User.query.get(session["user_id"])
+        habits = Habit.query.filter_by(user_id=user.id).all()
+        start_of_year = datetime(datetime.today().year, 1, 1).date()
+        weeks_in_year = (datetime(datetime.today().year + 1, 1, 1).date() - start_of_year).days // 7
+        return render_template("habits.html", habits=habits, start_of_year=start_of_year, weeks_in_year=weeks_in_year, timedelta=timedelta)
+
+
+@app.route("/toggle_habit_log", methods=["POST"], endpoint='toggle_habit_log')
+@login_required
+def toggle_habit_log():
+    habit_id = request.form.get("habit_id")
+    date_str = request.form.get("date")
+    date = datetime.strptime(date_str, "%Y-%m-%d").date()
+
+    habit_log = HabitLog.query.filter_by(habit_id=habit_id, date=date).first()
+    if habit_log:
+        habit_log.done = not habit_log.done
+    else:
+        habit_log = HabitLog(habit_id=habit_id, date=date, done=True)
+        db.session.add(habit_log)
+
+    db.session.commit()
+    return redirect("/habits")

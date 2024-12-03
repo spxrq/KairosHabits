@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Habits
+{% endblock %}
+
+{% block main %}
+    <h1>Create a New Habit</h1>
+    <form action="/habits" method="post">
+        <div class="mb-3">
+            <input class="form-control mx-auto w-auto" name="name" placeholder="Habit Name" type="text" required>
+        </div>
+        <div class="mb-3">
+            <textarea class="form-control mx-auto w-auto" name="description" placeholder="Description"></textarea>
+        </div>
+        <button class="btn btn-primary" type="submit">Create Habit</button>
+    </form>
+
+    <h1>Your Habits</h1>
+    {% for habit in habits %}
+        <h2>{{ habit.name }}</h2>
+        <form action="/toggle_habit_log" method="post">
+            <input type="hidden" name="habit_id" value="{{ habit.id }}">
+            <div class="habit-grid">
+                {% for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] %}
+                    <div class="day">{{ day }}</div>
+                    {% for week in range(weeks_in_year) %}
+                        {% set date = start_of_year + timedelta(days=week*7 + loop.index0) %}
+                        {% set log = habit.logs|selectattr('date', 'equalto', date)|list %}
+                        <button type="submit" name="date" value="{{ date }}" class="week 
+                            {% if log|length == 0 %}empty{% elif log[0].done %}done{% else %}not-done{% endif %}">
+                        </button>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+        </form>
+    {% endfor %}
+{% endblock %}
