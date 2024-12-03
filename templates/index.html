@@ -1,9 +1,25 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Index
+    Memento Mori Calendar
 {% endblock %}
 
 {% block main %}
-    <h1 class="text-center">Homepage</h1>
+    <h1>Life Calendar for {{ user.first_name }}</h1>
+    <div class="calendar-container">
+        <div class="grid">
+            {% for year in range(80) %}
+                {% if year > 0 and year % 10 == 0 %}
+                    {% for _ in range(52) %}
+                        <div class="week empty-line"></div>
+                    {% endfor %}
+                {% endif %}
+                {% for week in range(52) %}
+                    <div class="week 
+                        {% if year * 52 + week < weeks_lived %}lived{% elif year * 52 + week == weeks_lived %}current{% endif %}
+                    "></div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
 {% endblock %}

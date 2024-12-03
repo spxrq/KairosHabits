@@ -5,6 +5,7 @@ from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from werkzeug.security import check_password_hash, generate_password_hash
+from datetime import datetime, timedelta
 
 from helpers import apology, login_required
 
@@ -35,23 +36,23 @@ def login():
 
     # User reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
-        username = request.form.get("username")
+        email = request.form.get("email")
         password = request.form.get("password")
 
-        # Ensure username was submitted
-        if not username:
-            return apology("must provide username", 403)
+        # Ensure email was submitted
+        if not email:
+            return apology("must provide email", 403)
 
         # Ensure password was submitted
         elif not password:
             return apology("must provide password", 403)
 
         # Query database for username
-        user = User.query.filter_by(username=username).first()
+        user = User.query.filter_by(email=email).first()
 
         # Ensure username exists and password is correct
         if user is None or not check_password_hash(user.password_hash, password):
-            return apology("invalid username and/or password", 403)
+            return apology("invalid email and/or password", 403)
 
         # Remember which user has logged in
         session["user_id"] = user.id
@@ -72,10 +73,10 @@ def register():
 
     # User reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
+        first_name = request.form.get("first_name")
         email = request.form.get("email")
-        password = request.form.get("password")
-        confirmation = request.form.get("confirmation")
         birthdate = request.form.get("birthdate")
+        password = request.form.get("password")
         confirmation = request.form.get("confirmation")
 
         # Ensure email was submitted
@@ -99,6 +100,7 @@ def register():
         
         # Insert email and password into database
         user = User(email=email, 
+                    first_name=first_name,
                     password_hash=generate_password_hash(password), 
                     birthdate=birthdate)
 
@@ -118,4 +120,17 @@ def register():
 @app.route("/")
 # @login_required
 def index():
-    return render_template("index.html")
+    if not session.get("user_id"):
+        return redirect("/login")
+
+    user = User.query.get(session["user_id"])
+    weeks_lived = calculate_weeks_lived(user.birthdate)
+    total_weeks = 80 * 52
+
+    return render_template("index.html", user=user, weeks_lived=weeks_lived, total_weeks=total_weeks)
+
+
+def calculate_weeks_lived(birthdate):
+    today = datetime.today().date()
+    weeks_lived = (today - birthdate).days // 7
+    return weeks_lived

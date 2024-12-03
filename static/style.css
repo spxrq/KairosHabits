@@ -1,0 +1,25 @@
+.grid {
+    display: grid;
+    grid-template-columns: repeat(52, 10px);
+    grid-gap: 2px;
+    position: relative;
+}
+.week {
+    width: 10px;
+    height: 10px;
+    background-color: lightgray;
+}
+.lived {
+    background-color: black;
+}
+.current {
+    background-color: blue;
+}
+.empty-line {
+    background-color: white;
+}
+.year-label {
+    position: absolute;
+    left: 600px; /* Adjust this value based on your layout */
+    font-size: 12px;
+}
