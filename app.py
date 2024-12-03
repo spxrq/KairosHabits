@@ -72,13 +72,15 @@ def register():
 
     # User reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
-        username = request.form.get("username")
+        email = request.form.get("email")
         password = request.form.get("password")
         confirmation = request.form.get("confirmation")
+        birthdate = request.form.get("birthdate")
+        confirmation = request.form.get("confirmation")
 
-        # Ensure username was submitted
-        if not username:
-            return apology("must provide username", 400)
+        # Ensure email was submitted
+        if not email:
+            return apology("must provide email", 400)
         
         # Ensure password was submitted
         if not password or not confirmation:
@@ -88,15 +90,17 @@ def register():
         if password != confirmation:
             return apology("passwords don't match", 400)
 
-        # Query database for username
-        user = User.query.filter_by(username=username).first()
+        # Query database for email
+        user = User.query.filter_by(email=email).first()
 
         # Ensure that user doesn't already exist
         if user:
-            return apology("user already exists", 400)
+            return apology("email already exists", 400)
         
-        # Insert username and password into database
-        user = User(username=username, password_hash=generate_password_hash(password))
+        # Insert email and password into database
+        user = User(email=email, 
+                    password_hash=generate_password_hash(password), 
+                    birthdate=birthdate)
 
         # Commit changes to users database
         db.session.add(user)

@@ -5,8 +5,10 @@ db = SQLAlchemy()
 class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String, nullable=False)
+    email = db.Column(db.String, nullable=False)
     password_hash = db.Column(db.String, nullable=False)
+    birthdate = db.Column(db.Date, nullable=False)
+    habits = db.relationship('Habit', backref='user', lazy=True)
 
 class Habit(db.Model):
     __tablename__ = "habits"
