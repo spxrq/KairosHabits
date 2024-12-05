@@ -5,6 +5,7 @@
 {% endblock %}
 
 {% block main %}
+
     <h1>Create a New Habit</h1>
     <form action="/habits" method="post">
         <div class="mb-3">
@@ -17,22 +18,54 @@
     </form>
 
     <h1>Your Habits</h1>
-    {% for habit in habits %}
-        <h2>{{ habit.name }}</h2>
-        <form action="/toggle_habit_log" method="post">
-            <input type="hidden" name="habit_id" value="{{ habit.id }}">
-            <div class="habit-grid">
-                {% for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] %}
-                    <div class="day">{{ day }}</div>
-                    {% for week in range(weeks_in_year) %}
-                        {% set date = start_of_year + timedelta(days=week*7 + loop.index0) %}
-                        {% set log = habit.logs|selectattr('date', 'equalto', date)|list %}
-                        <button type="submit" name="date" value="{{ date }}" class="week 
-                            {% if log|length == 0 %}empty{% elif log[0].done %}done{% else %}not-done{% endif %}">
-                        </button>
-                    {% endfor %}
-                {% endfor %}
+    <!-- Year Navigation -->
+    <div class="year-navigation">
+        <a href="/habits?year={{ current_year - 1 }}" class="btn btn-secondary">← Previous Year</a>
+        <span class="current-year">{{ current_year }}</span>
+        <a href="/habits?year={{ current_year + 1 }}" class="btn btn-secondary">Next Year →</a>
+    </div>
+
+    <!-- Habit Cards -->
+    <div class="habit-cards">
+        {% for habit in habits %}
+        <div class="habit-card">
+            <div class="habit-header">
+                <div class="habit-icon">💡</div>
+                <div>
+                    <h2 class="habit-title">{{ habit.name }}</h2>
+                    <p class="habit-description">{{ habit.description }}</p>
+                </div>
             </div>
-        </form>
-    {% endfor %}
+            <form action="/toggle_habit_log" method="post" class="habit-grid-form">
+                <input type="hidden" name="habit_id" value="{{ habit.id }}">
+                <div class="habit-grid-wrapper">
+                    <!-- Day Labels -->
+                    <div class="day-labels">
+                        {% for day in ['M', 'T', 'W', 'T', 'F', 'S', 'S'] %}
+                        <div class="day-label">{{ day }}</div>
+                        {% endfor %}
+                    </div>
+                    <!-- Habit Grid -->
+                    <div class="habit-grid">
+                        {% for week in range(52) %}
+                        <div class="week-row">
+                            {% for day_index in range(7) %}
+                            {% set date = start_of_year + timedelta(days=week * 7 + day_index) %}
+                            {% if date.year == current_year %}
+                            {% set log = habit.logs|selectattr('date', 'equalto', date)|list %}
+                            <button type="submit" name="date" value="{{ date }}" class="week 
+                                {% if log|length == 0 %}empty{% elif log[0].done %}done{% else %}not-done{% endif %}">
+                            </button>
+                            {% else %}
+                            <div class="week disabled"></div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
 {% endblock %}

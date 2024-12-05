@@ -1,59 +1,130 @@
-.grid {
-    display: grid;
-    grid-template-columns: repeat(52, 10px);
-    grid-gap: 2px;
-    position: relative;
-}
-.week {
-    width: 10px;
-    height: 10px;
-    background-color: lightgray;
-}
-.lived {
-    background-color: black;
-}
-.current {
-    background-color: blue;
-}
-.empty-line {
-    background-color: white;
-}
-.year-label {
-    position: absolute;
-    left: 600px; /* Adjust this value based on your layout */
-    font-size: 12px;
+/* Global Styles */
+body {
+    font-family: Arial, sans-serif;
 }
 
-/* 
-.habit-grid {
-    display: grid;
-    grid-template-columns: repeat(52, 20px);
-    grid-gap: 2px;
+/* Year Navigation */
+.year-navigation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px 0;
+}
+
+.year-navigation .btn {
+    background: none;
+    border: none;
+    color: #0a84ff;
+    text-decoration: none;
+    font-size: 1.2em;
+    cursor: pointer;
+}
+
+.year-navigation .btn:hover {
+    text-decoration: underline;
+}
+
+.year-navigation .current-year {
+    margin: 0 20px;
+    font-size: 1.5em;
+    color: black;
+}
+
+/* Habit Cards */
+.habit-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.habit-card {
+    background-color: lightgrey;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.habit-header {
+    display: flex;
+    align-items: center;
     margin-bottom: 20px;
 }
 
-.day {
-    grid-column: 1 / span 52;
-    font-weight: bold;
-    margin-bottom: 5px;
+.habit-icon {
+    font-size: 2.5em;
+    margin-right: 15px;
+}
+
+.habit-title {
+    margin: 0;
+    font-size: 1.5em;
+}
+
+.habit-description {
+    margin: 0;
+    font-size: 0.9em;
+    color: #555555;
+}
+
+/* Habit Grid Wrapper */
+.habit-grid-wrapper {
+    display: flex;
+    align-items: flex-start;
+}
+
+/* Day Labels */
+.day-labels {
+    display: flex;
+    flex-direction: column;
+    margin-right: 10px;
+}
+
+.day-label {
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    line-height: 20px;
+    font-size: 12px;
+    color: black;
+}
+
+/* Habit Grid */
+.habit-grid {
+    display: grid;
+    grid-template-columns: repeat(52, 20px);
+    grid-template-rows: repeat(7, 20px); /* Ensure exactly 7 rows */
+    gap: 5px;
+    justify-content: center;
 }
 
 .week {
     width: 20px;
     height: 20px;
-    cursor: pointer;
     border: none;
-}
-
-.week.empty {
-    background-color: grey;
-}
-
-.week.not-done {
-    background-color: white;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background-color 0.3s;
 }
 
 .week.done {
-    background-color: green;
+    background-color: #0a84ff; /* Blue for true */
 }
-/* 
+
+.week.not-done {
+    background-color: #ff453a; /* Red for false */
+}
+
+.week.empty {
+    background-color: #b0b0b0; /* Darker gray to make it visible */
+    opacity: 0.7; /* Slight transparency for distinction */
+}
+
+.week.disabled {
+    background-color: #f0f0f0;
+    cursor: not-allowed;
+}
+
+/* Hover Effects */
+.week:hover {
+    background-color: #5ac8fa;
+}

@@ -102,7 +102,8 @@ def register():
         user = User(email=email, 
                     first_name=first_name,
                     password_hash=generate_password_hash(password), 
-                    birthdate=birthdate)
+                    birthdate=birthdate,
+                    registration_date=datetime.today().date())
 
         # Commit changes to users database
         db.session.add(user)
@@ -127,7 +128,8 @@ def logout():
 @app.route("/")
 @login_required
 def index():
-    if not session.get("user_id"):
+    user = User.query.get(session["user_id"])
+    if user is None:
         return redirect("/login")
 
     user = User.query.get(session["user_id"])
@@ -143,10 +145,11 @@ def calculate_weeks_lived(birthdate):
     return weeks_lived
 
 
-@app.route("/habits", methods=["GET", "POST"], endpoint='habits')
+@app.route("/habits", methods=["GET", "POST"])
 @login_required
 def habits():
     if request.method == "POST":
+        # Create a new habit
         name = request.form.get("name")
         description = request.form.get("description")
 
@@ -157,21 +160,48 @@ def habits():
         db.session.add(habit)
         db.session.commit()
         return redirect("/habits")
+
     else:
+        # Get the year to display from query parameters, default to current year
+        current_year = int(request.args.get("year", datetime.today().year))
+
+        # Calculate start and end of the year
+        start_of_year = datetime(current_year, 1, 1).date()
+        end_of_year = datetime(current_year, 12, 31).date()
+        weeks_in_year = (end_of_year - start_of_year).days // 7 + 1
+        days_in_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
         user = User.query.get(session["user_id"])
         habits = Habit.query.filter_by(user_id=user.id).all()
-        start_of_year = datetime(datetime.today().year, 1, 1).date()
-        weeks_in_year = (datetime(datetime.today().year + 1, 1, 1).date() - start_of_year).days // 7
-        return render_template("habits.html", habits=habits, start_of_year=start_of_year, weeks_in_year=weeks_in_year, timedelta=timedelta)
+
+        # Collect logs for each habit
+        for habit in habits:
+            habit.logs = HabitLog.query.filter(HabitLog.habit_id == habit.id,
+                                               HabitLog.date >= start_of_year,
+                                               HabitLog.date <= end_of_year).all()
+
+        return render_template("habits.html", habits=habits, start_of_year=start_of_year,
+                               weeks_in_year=weeks_in_year, days_in_week=days_in_week, 
+                               current_year=current_year, timedelta=timedelta)
 
 
-@app.route("/toggle_habit_log", methods=["POST"], endpoint='toggle_habit_log')
+@app.route("/toggle_habit_log", methods=["POST"])
 @login_required
 def toggle_habit_log():
+    # Get the habit_id and date from the form
     habit_id = request.form.get("habit_id")
     date_str = request.form.get("date")
+    if not habit_id or not date_str:
+        return apology("Invalid habit or date", 400)
+
     date = datetime.strptime(date_str, "%Y-%m-%d").date()
 
+    # Ensure the habit_id is valid
+    habit = Habit.query.get(habit_id)
+    if not habit or habit.user_id != session["user_id"]:
+        return apology("Invalid habit", 403)
+
+    # Toggle the habit log for the given date
     habit_log = HabitLog.query.filter_by(habit_id=habit_id, date=date).first()
     if habit_log:
         habit_log.done = not habit_log.done
@@ -180,4 +210,4 @@ def toggle_habit_log():
         db.session.add(habit_log)
 
     db.session.commit()
-    return redirect("/habits")
+    return redirect(f"/habits?year={date.year}")

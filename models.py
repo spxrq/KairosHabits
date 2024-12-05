@@ -9,6 +9,7 @@ class User(db.Model):
     email = db.Column(db.String, nullable=False)
     password_hash = db.Column(db.String, nullable=False)
     birthdate = db.Column(db.Date, nullable=False)
+    registration_date = db.Column(db.Date, nullable=False)
     habits = db.relationship('Habit', backref='user', lazy=True)
 
 class Habit(db.Model):
