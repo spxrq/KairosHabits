@@ -5,7 +5,8 @@ from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from werkzeug.security import check_password_hash, generate_password_hash
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
+from random import choice
 
 from helpers import apology, login_required
 
@@ -145,44 +146,146 @@ def calculate_weeks_lived(birthdate):
     return weeks_lived
 
 
+def generate_week_columns(start_of_year, end_of_year):
+    """
+    Generate a 2D list of dates for the habit grid.
+    Each row represents a week, with 7 columns (Monday to Sunday).
+    """
+    week_columns = []
+    current_date = start_of_year
+
+    while current_date <= end_of_year:
+        week = []
+        for _ in range(7):  # Create 7 days (Mon-Sun)
+            if current_date <= end_of_year:
+                week.append(current_date)
+                current_date += timedelta(days=1)
+            else:
+                week.append(None)  # Fill remaining cells with None
+        week_columns.append(week)
+    return week_columns
+
+
+def generate_background_color():
+    """
+    Returns a random hex color string from a curated list of aesthetically pleasing colors.
+    """
+    colors = [
+        "#5DADE2",  # Blue
+        "#58D68D",  # Green
+        "#F39C12",  # Orange
+        "#AF7AC5",  # Purple
+        "#F1948A",  # Pink
+        "#48C9B0",  # Teal
+        "#F7DC6F",  # Yellow
+    ]
+    return choice(colors)
+
+
 @app.route("/habits", methods=["GET", "POST"])
 @login_required
 def habits():
     if request.method == "POST":
-        # Create a new habit
         name = request.form.get("name")
         description = request.form.get("description")
 
         if not name:
             return apology("must provide habit name", 400)
 
-        habit = Habit(name=name, description=description, user_id=session["user_id"])
+        habit = Habit(name=name, 
+                      description=description,
+                      background_color=generate_background_color(),
+                      user_id=session["user_id"])
         db.session.add(habit)
         db.session.commit()
         return redirect("/habits")
 
     else:
-        # Get the year to display from query parameters, default to current year
         current_year = int(request.args.get("year", datetime.today().year))
-
-        # Calculate start and end of the year
-        start_of_year = datetime(current_year, 1, 1).date()
-        end_of_year = datetime(current_year, 12, 31).date()
-        weeks_in_year = (end_of_year - start_of_year).days // 7 + 1
-        days_in_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        
+        # Calculate dates for the year
+        start_date = date(current_year, 1, 1)
+        end_date = date(current_year, 12, 31)
+        today = date.today()
+        
+        # If viewing a past year, set today to end of that year
+        # If viewing a future year, set today to start of that year
+        if current_year < today.year:
+            today = end_date
+        elif current_year > today.year:
+            today = start_date
+        
+        # Get first day of the year (0 = Monday, 6 = Sunday)
+        first_weekday = start_date.weekday()
+        
+        # Create a list of columns (weeks) containing dates
+        week_columns = []
+        current_date = start_date
+        
+        # Add first column with empty spaces before January 1st
+        first_column = [None] * first_weekday + [start_date]
+        remaining_days = 6 - first_weekday
+        temp_date = start_date
+        for _ in range(remaining_days):
+            temp_date += timedelta(days=1)
+            if temp_date.year == current_year:
+                first_column.append(temp_date)
+            else:
+                first_column.append(None)
+        week_columns.append(first_column)
+        
+        # Move to first day of second week
+        current_date = start_date + timedelta(days=(7 - first_weekday))
+        
+        # Generate remaining columns
+        while current_date <= end_date:
+            week = []
+            for _ in range(7):  # Each column has 7 days
+                if current_date <= end_date:
+                    week.append(current_date)
+                    current_date += timedelta(days=1)
+                else:
+                    week.append(None)
+            week_columns.append(week)
 
         user = User.query.get(session["user_id"])
         habits = Habit.query.filter_by(user_id=user.id).all()
-
-        # Collect logs for each habit
+        
+        # Get all habit logs for the year
         for habit in habits:
-            habit.logs = HabitLog.query.filter(HabitLog.habit_id == habit.id,
-                                               HabitLog.date >= start_of_year,
-                                               HabitLog.date <= end_of_year).all()
+            logs = HabitLog.query.filter(
+                HabitLog.habit_id == habit.id,
+                HabitLog.date >= start_date,
+                HabitLog.date <= end_date
+            ).all()
+            
+            # Convert logs to a dictionary for easier lookup
+            habit.log_dict = {log.date: log.done for log in logs}
 
-        return render_template("habits.html", habits=habits, start_of_year=start_of_year,
-                               weeks_in_year=weeks_in_year, days_in_week=days_in_week, 
-                               current_year=current_year, timedelta=timedelta)
+        return render_template(
+            "habits.html",
+            habits=habits,
+            week_columns=week_columns,
+            current_year=current_year,
+            today=today
+        )
+    
+@app.route("/delete_habit", methods=["POST"])
+@login_required
+def delete_habit():
+    habit_id = request.form.get("habit_id")
+
+    # Fetch the habit to delete
+    habit = Habit.query.filter_by(id=habit_id, user_id=session["user_id"]).first()
+    if not habit:
+        return apology("Habit not found", 404)
+
+    # Delete the habit and its associated logs
+    HabitLog.query.filter_by(habit_id=habit.id).delete()
+    db.session.delete(habit)
+    db.session.commit()
+
+    return redirect("/habits")
 
 
 @app.route("/toggle_habit_log", methods=["POST"])

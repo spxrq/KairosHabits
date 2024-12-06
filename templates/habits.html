@@ -1,70 +1,78 @@
 {% extends "layout.html" %}
-
 {% block title %}
     Habits
 {% endblock %}
 
 {% block main %}
-
-    <h1>Create a New Habit</h1>
-    <form action="/habits" method="post">
-        <div class="mb-3">
-            <input class="form-control mx-auto w-auto" name="name" placeholder="Habit Name" type="text" required>
-        </div>
-        <div class="mb-3">
-            <textarea class="form-control mx-auto w-auto" name="description" placeholder="Description"></textarea>
-        </div>
-        <button class="btn btn-primary" type="submit">Create Habit</button>
-    </form>
-
-    <h1>Your Habits</h1>
-    <!-- Year Navigation -->
-    <div class="year-navigation">
-        <a href="/habits?year={{ current_year - 1 }}" class="btn btn-secondary">← Previous Year</a>
-        <span class="current-year">{{ current_year }}</span>
-        <a href="/habits?year={{ current_year + 1 }}" class="btn btn-secondary">Next Year →</a>
+    <!-- Create New Habit Form -->
+    <div class="mb-3">
+        <form action="/habits" method="post">
+            <input type="text" name="name" placeholder="Habit Name" class="form-control mb-2">
+            <textarea name="description" placeholder="Description (optional)" class="form-control mb-2"></textarea>
+            <button type="submit" class="btn btn-primary">Create Habit</button>
+        </form>
     </div>
 
-    <!-- Habit Cards -->
+    <!-- Year Navigation -->
+    <div class="year-navigation">
+        <a href="/habits?year={{ current_year - 1 }}" class="btn">← {{ current_year - 1 }}</a>
+        <span class="current-year">{{ current_year }}</span>
+        <a href="/habits?year={{ current_year + 1 }}" class="btn">{{ current_year + 1 }} →</a>
+    </div>
+
+    <!-- Habits -->
     <div class="habit-cards">
         {% for habit in habits %}
-        <div class="habit-card">
+        <div class="habit-card" style="background-color: {{ habit.background_color }};">
+            <!-- Delete Habit Button -->
+            <form action="/delete_habit" method="post" class="delete-habit-form">
+                <input type="hidden" name="habit_id" value="{{ habit.id }}">
+                <button type="submit" class="delete-habit-btn" title="Delete Habit">X</button>
+            </form>
+
             <div class="habit-header">
-                <div class="habit-icon">💡</div>
+                <div class="habit-icon">📅</div>
                 <div>
                     <h2 class="habit-title">{{ habit.name }}</h2>
-                    <p class="habit-description">{{ habit.description }}</p>
+                    {% if habit.description %}
+                        <p class="habit-description">{{ habit.description }}</p>
+                    {% endif %}
                 </div>
             </div>
-            <form action="/toggle_habit_log" method="post" class="habit-grid-form">
-                <input type="hidden" name="habit_id" value="{{ habit.id }}">
-                <div class="habit-grid-wrapper">
-                    <!-- Day Labels -->
-                    <div class="day-labels">
-                        {% for day in ['M', 'T', 'W', 'T', 'F', 'S', 'S'] %}
-                        <div class="day-label">{{ day }}</div>
-                        {% endfor %}
-                    </div>
-                    <!-- Habit Grid -->
-                    <div class="habit-grid">
-                        {% for week in range(52) %}
-                        <div class="week-row">
-                            {% for day_index in range(7) %}
-                            {% set date = start_of_year + timedelta(days=week * 7 + day_index) %}
-                            {% if date.year == current_year %}
-                            {% set log = habit.logs|selectattr('date', 'equalto', date)|list %}
-                            <button type="submit" name="date" value="{{ date }}" class="week 
-                                {% if log|length == 0 %}empty{% elif log[0].done %}done{% else %}not-done{% endif %}">
-                            </button>
-                            {% else %}
-                            <div class="week disabled"></div>
-                            {% endif %}
+
+            <div class="habit-grid-wrapper">
+                <!-- Habit Grid -->
+                <div class="habit-grid">
+                    {% for row in week_columns %}
+                        <div class="daily-column">
+                            {% for day in row %}
+                                {% if day %}
+                                    <form action="/toggle_habit_log" method="post" style="margin: 0;">
+                                        <input type="hidden" name="habit_id" value="{{ habit.id }}">
+                                        <input type="hidden" name="date" value="{{ day.isoformat() }}">
+                                        <button type="submit" 
+                                            class="daily 
+                                            {% if current_year > today.year or (current_year == today.year and day > today) %}
+                                                disabled
+                                            {% elif habit.log_dict.get(day) == true %}
+                                                done
+                                            {% elif habit.log_dict.get(day) == false %}
+                                                not-done
+                                            {% else %}
+                                                empty
+                                            {% endif %}"
+                                            {% if current_year > today.year or (current_year == today.year and day > today) %}disabled{% endif %}
+                                            title="{{ day.strftime('%A, %B %d, %Y') }}"
+                                        ></button>
+                                    </form>
+                                {% else %}
+                                    <div class="daily disabled"></div>
+                                {% endif %}
                             {% endfor %}
                         </div>
-                        {% endfor %}
-                    </div>
+                    {% endfor %}
                 </div>
-            </form>
+            </div>
         </div>
         {% endfor %}
     </div>

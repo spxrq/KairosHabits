@@ -1,7 +1,64 @@
-/* Global Styles */
 body {
-    font-family: Arial, sans-serif;
+    font-family: "Arial", sans-serif;
+    margin: 0;
+    padding: 0;
 }
+
+h1 {
+    color: #000;
+    letter-spacing: 5px;
+}
+
+/* Calendar Layout */
+.calendar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 15px;
+}
+
+/* Life Grid */
+.life-grid {
+    display: grid;
+    grid-template-rows: repeat(80, auto); /* One row per year */
+    gap: 3px;
+}
+
+.year-row {
+    display: grid;
+    grid-template-columns: repeat(52, auto); /* 52 weeks per year */
+    gap: 2px;
+}
+
+/* Week Boxes */
+.week {
+    width: 12px;
+    height: 12px;
+    border: 1px solid #b0b0b0; /* Subtle border for structure */
+    background-color: #dcdcdc; /* Default grey for future weeks */
+    transition: background-color 0.3s ease;
+}
+
+.week.lived {
+    background-color: #000; /* Black for lived weeks */
+}
+
+.week.current {
+    background-color: #0056b3; /* Blue for the current week */
+    border: 1px solid #003f7f; /* Highlighted border for current week */
+}
+
+.week.future:hover {
+    background-color: #777; /* Slight highlight for hover */
+    cursor: pointer;
+}
+
+/* Decade Break */
+.decade-break {
+    flex-basis: 100%; /* Force a newline */
+    height: 20px; /* Add spacing between decades */
+}
+
 
 /* Year Navigation */
 .year-navigation {
@@ -88,16 +145,17 @@ body {
     color: black;
 }
 
+
 /* Habit Grid */
 .habit-grid {
-    display: grid;
+    display: flex;
     grid-template-columns: repeat(52, 20px);
     grid-template-rows: repeat(7, 20px); /* Ensure exactly 7 rows */
     gap: 5px;
-    justify-content: center;
+    justify-content: flex-start;
 }
 
-.week {
+.daily {
     width: 20px;
     height: 20px;
     border: none;
@@ -106,25 +164,64 @@ body {
     transition: background-color 0.3s;
 }
 
-.week.done {
+.daily-column {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.daily.done {
     background-color: #0a84ff; /* Blue for true */
 }
 
-.week.not-done {
+.daily.not-done {
     background-color: #ff453a; /* Red for false */
 }
 
-.week.empty {
+.daily.empty {
     background-color: #b0b0b0; /* Darker gray to make it visible */
     opacity: 0.7; /* Slight transparency for distinction */
 }
 
-.week.disabled {
+.daily.disabled {
     background-color: #f0f0f0;
-    cursor: not-allowed;
+    opacity: 0.8; /* Consistent transparency */
 }
 
 /* Hover Effects */
-.week:hover {
+.daily:hover {
     background-color: #5ac8fa;
+}
+
+
+/* Delete Habit Button */
+.delete-habit-form {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1;
+}
+
+.delete-habit-btn {
+    background-color: transparent;
+    border: none;
+    color: #ff453a;
+    font-size: 1.2em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.delete-habit-btn:hover {
+    color: #ff0000;
+}
+
+/* Ensure Habit Card Styles Allow Space for Delete Button */
+.habit-card {
+    position: relative;
+    padding: 20px;
+    padding-top: 40px; /* Adjust to avoid overlap with delete button */
+    border-radius: 15px;
+    background-color: lightgrey;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }

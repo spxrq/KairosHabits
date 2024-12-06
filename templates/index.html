@@ -5,24 +5,24 @@
 {% endblock %}
 
 {% block main %}
-    <h1>Life Calendar for {{ user.first_name }}</h1>
-    <div class="calendar-container">
-        <div class="grid">
-            {% for year in range(80) %}
-                {% if year > 0 and year % 10 == 0 %}
-                    {% for _ in range(52) %}
-                        <div class="week empty-line"></div>
-                    {% endfor %}
-                {% endif %}
-                {% for week in range(52) %}
-                    {% set week_index = year * 52 + week %}
-                    <div class="week 
-                        {% if week_index < weeks_lived %}lived{% 
-                        elif week_index == weeks_lived %}current{% 
-                        endif %}
-                    "></div>
-                {% endfor %}
+<h1>MEMENTO MORI</h1>
+<p>Visualize your life in weeks. Each box represents one week of your life.</p>
+
+<div class="calendar">
+    <div class="life-grid">
+        {% for year in range(80) %}
+        {% if year % 10 == 0 %}
+        <div class="decade-break"></div> <!-- Newline after every 10 rows -->
+        {% endif %}
+        <div class="year-row">
+            {% for week in range(52) %}
+            {% set week_index = year * 52 + week %}
+            <div
+                class="week {% if week_index < weeks_lived %}lived{% elif week_index == weeks_lived %}current{% else %}future{% endif %}"
+                title="Age {{ year }}, Week {{ week + 1 }}"></div>
             {% endfor %}
         </div>
+        {% endfor %}
     </div>
+</div>
 {% endblock %}
