@@ -12,10 +12,14 @@ h1 {
 /* Calendar Layout */
 .calendar {
     display: flex;
+    flex-wrap: wrap;
     align-items: flex-start;
     justify-content: center;
     gap: 15px;
+    max-width: 1200px;
+    margin: 0 auto;
 }
+
 
 /* Life Grid */
 .life-grid {
@@ -26,7 +30,7 @@ h1 {
 
 .year-row {
     display: grid;
-    grid-template-columns: repeat(52, auto); /* 52 weeks per year */
+    grid-template-columns: repeat(52, 12px);
     gap: 2px;
 }
 
@@ -34,9 +38,14 @@ h1 {
 .week {
     width: 12px;
     height: 12px;
-    border: 1px solid #b0b0b0; /* Subtle border for structure */
-    background-color: #dcdcdc; /* Default grey for future weeks */
-    transition: background-color 0.3s ease;
+    border: 1px solid rgba(176, 176, 176, 0.5);
+    transition: transform 0.2s ease;
+    position: relative;
+}
+
+.week:hover {
+    transform: scale(1.2);
+    z-index: 1;
 }
 
 .week.lived {
@@ -48,15 +57,29 @@ h1 {
     border: 1px solid #003f7f; /* Highlighted border for current week */
 }
 
-.week.future:hover {
-    background-color: #777; /* Slight highlight for hover */
-    cursor: pointer;
+/* Tooltip styling */
+.tooltip {
+    position: relative;
 }
 
-/* Decade Break */
+.tooltip:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 5px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: pre-line;
+    z-index: 10;
+}
+
 .decade-break {
-    flex-basis: 100%; /* Force a newline */
-    height: 20px; /* Add spacing between decades */
+    flex-basis: 100%;
+    height: 20px;
 }
 
 

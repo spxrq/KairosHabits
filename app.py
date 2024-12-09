@@ -126,6 +126,81 @@ def logout():
     return redirect("/")
 
 
+def get_color_for_percentage(percentage):
+    """
+    Returns a color between red and green based on the percentage.
+    percentage should be between 0 and 1
+    """
+    # Ensure percentage is between 0 and 1
+    percentage = max(0, min(1, percentage))
+    
+    # Convert percentage to a color between red (255,0,0) and green (0,255,0)
+    red = int(255 * (1 - percentage))
+    green = int(255 * percentage)
+    
+    return f"rgb({red}, {green}, 0)"
+
+def calculate_week_habits_percentage(habits, start_date, end_date):
+    """
+    Calculate the percentage of completed habits for a given week.
+    Returns a float between 0 and 1.
+    """
+    total_possible = len(habits) * 7  # Total possible habit entries for the week
+    if total_possible == 0:
+        return 0
+        
+    completed = 0
+    
+    for habit in habits:
+        # Get habit logs for this week
+        week_logs = HabitLog.query.filter(
+            HabitLog.habit_id == habit.id,
+            HabitLog.date >= start_date,
+            HabitLog.date <= end_date,
+            HabitLog.done == True
+        ).count()
+        
+        completed += week_logs
+    
+    return completed / total_possible
+
+def get_week_data(birthdate, registration_date, habits):
+    """
+    Generate data for each week including whether it was lived and its color based on habit completion.
+    Returns a list of dictionaries containing week information.
+    """
+    today = datetime.today().date()
+    total_weeks = 80 * 52
+    weeks_data = []
+    
+    # Calculate the Monday of the birth week
+    birth_week_monday = birthdate - timedelta(days=birthdate.weekday())
+    
+    # Calculate the Monday of the registration week
+    registration_week_monday = registration_date - timedelta(days=registration_date.weekday())
+    
+    for week_num in range(total_weeks):
+        week_start = birth_week_monday + timedelta(weeks=week_num)
+        week_end = week_start + timedelta(days=6)
+        
+        week_data = {
+            'lived': week_end < today,
+            'start_date': week_start,
+            'end_date': week_end,
+            'is_post_registration': week_start >= registration_week_monday
+        }
+        
+        if week_data['lived'] and week_data['is_post_registration']:
+            # Calculate habit completion percentage for post-registration weeks
+            percentage = calculate_week_habits_percentage(habits, week_start, week_end)
+            week_data['color'] = get_color_for_percentage(percentage)
+        else:
+            week_data['color'] = 'black' if week_data['lived'] else '#dcdcdc'
+            
+        weeks_data.append(week_data)
+    
+    return weeks_data
+
 @app.route("/")
 @login_required
 def index():
@@ -133,11 +208,21 @@ def index():
     if user is None:
         return redirect("/login")
 
-    user = User.query.get(session["user_id"])
-    weeks_lived = calculate_weeks_lived(user.birthdate)
+    # Get all habits for the user
+    habits = Habit.query.filter_by(user_id=user.id).all()
+    
+    # Get weeks data including habit completion colors
+    weeks_data = get_week_data(user.birthdate, user.registration_date, habits)
+    
+    # Calculate basic statistics
     total_weeks = 80 * 52
+    weeks_lived = sum(1 for week in weeks_data if week['lived'])
 
-    return render_template("index.html", user=user, weeks_lived=weeks_lived, total_weeks=total_weeks)
+    return render_template("index.html", 
+                         user=user,
+                         weeks_data=weeks_data, 
+                         weeks_lived=weeks_lived,
+                         total_weeks=total_weeks)
 
 
 def calculate_weeks_lived(birthdate):
