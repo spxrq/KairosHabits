@@ -206,46 +206,39 @@ def habits():
         # Calculate dates for the year
         start_date = date(current_year, 1, 1)
         end_date = date(current_year, 12, 31)
-        today = date.today()
         
-        # If viewing a past year, set today to end of that year
-        # If viewing a future year, set today to start of that year
-        if current_year < today.year:
-            today = end_date
-        elif current_year > today.year:
-            today = start_date
+        # Generate week columns for the entire year
+        week_columns = []
         
-        # Get first day of the year (0 = Monday, 6 = Sunday)
+        # Get the weekday of January 1st (0 = Monday, 6 = Sunday)
         first_weekday = start_date.weekday()
         
-        # Create a list of columns (weeks) containing dates
-        week_columns = []
-        current_date = start_date
+        # Add empty days before January 1st in the first week
+        first_week = [None] * first_weekday
         
-        # Add first column with empty spaces before January 1st
-        first_column = [None] * first_weekday + [start_date]
-        remaining_days = 6 - first_weekday
+        # Fill the rest of the first week
         temp_date = start_date
-        for _ in range(remaining_days):
-            temp_date += timedelta(days=1)
-            if temp_date.year == current_year:
-                first_column.append(temp_date)
+        while len(first_week) < 7:
+            if temp_date <= end_date:
+                first_week.append(temp_date)
+                temp_date += timedelta(days=1)
             else:
-                first_column.append(None)
-        week_columns.append(first_column)
+                first_week.append(None)
         
-        # Move to first day of second week
+        week_columns.append(first_week)
+        
+        # Start from the first day of the second week
         current_date = start_date + timedelta(days=(7 - first_weekday))
         
-        # Generate remaining columns
+        # Generate remaining weeks
         while current_date <= end_date:
             week = []
-            for _ in range(7):  # Each column has 7 days
+            for _ in range(7):  # 7 days per week
                 if current_date <= end_date:
                     week.append(current_date)
                     current_date += timedelta(days=1)
                 else:
-                    week.append(None)
+                    week.append(None)  # Add None for days beyond the year
             week_columns.append(week)
 
         user = User.query.get(session["user_id"])
@@ -266,9 +259,9 @@ def habits():
             "habits.html",
             habits=habits,
             week_columns=week_columns,
-            current_year=current_year,
-            today=today
+            current_year=current_year
         )
+
     
 @app.route("/delete_habit", methods=["POST"])
 @login_required

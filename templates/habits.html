@@ -1,79 +1,64 @@
 {% extends "layout.html" %}
-{% block title %}
-    Habits
-{% endblock %}
-
+{% block title %}Habits{% endblock %}
 {% block main %}
-    <!-- Create New Habit Form -->
-    <div class="mb-3">
-        <form action="/habits" method="post">
-            <input type="text" name="name" placeholder="Habit Name" class="form-control mb-2">
-            <textarea name="description" placeholder="Description (optional)" class="form-control mb-2"></textarea>
-            <button type="submit" class="btn btn-primary">Create Habit</button>
+
+<div class="mb-3">
+    <h2>Create Habit</h2>
+    <form action="/habits" method="post">
+        <input type="text" name="name" placeholder="Habit Name" required>
+        <textarea name="description" placeholder="Description (optional)"></textarea>
+        <button type="submit">Create</button>
+    </form>
+</div>
+
+<div class="year-navigation">
+    <a href="/habits?year={{ current_year - 1 }}" class="btn">← {{ current_year - 1 }}</a>
+    <span class="current-year">{{ current_year }}</span>
+    <a href="/habits?year={{ current_year + 1 }}" class="btn">{{ current_year + 1 }} →</a>
+</div>
+
+<div class="habit-cards">
+    {% for habit in habits %}
+    <div class="habit-card" style="background-color: {{ habit.background_color }};">
+        <form action="/delete_habit" method="post" class="delete-habit-form">
+            <input type="hidden" name="habit_id" value="{{ habit.id }}">
+            <button type="submit" class="delete-habit-btn">×</button>
         </form>
-    </div>
 
-    <!-- Year Navigation -->
-    <div class="year-navigation">
-        <a href="/habits?year={{ current_year - 1 }}" class="btn">← {{ current_year - 1 }}</a>
-        <span class="current-year">{{ current_year }}</span>
-        <a href="/habits?year={{ current_year + 1 }}" class="btn">{{ current_year + 1 }} →</a>
-    </div>
-
-    <!-- Habits -->
-    <div class="habit-cards">
-        {% for habit in habits %}
-        <div class="habit-card" style="background-color: {{ habit.background_color }};">
-            <!-- Delete Habit Button -->
-            <form action="/delete_habit" method="post" class="delete-habit-form">
-                <input type="hidden" name="habit_id" value="{{ habit.id }}">
-                <button type="submit" class="delete-habit-btn" title="Delete Habit">X</button>
-            </form>
-
-            <div class="habit-header">
-                <div class="habit-icon">📅</div>
-                <div>
-                    <h2 class="habit-title">{{ habit.name }}</h2>
-                    {% if habit.description %}
-                        <p class="habit-description">{{ habit.description }}</p>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="habit-grid-wrapper">
-                <!-- Habit Grid -->
-                <div class="habit-grid">
-                    {% for row in week_columns %}
-                        <div class="daily-column">
-                            {% for day in row %}
-                                {% if day %}
-                                    <form action="/toggle_habit_log" method="post" style="margin: 0;">
-                                        <input type="hidden" name="habit_id" value="{{ habit.id }}">
-                                        <input type="hidden" name="date" value="{{ day.isoformat() }}">
-                                        <button type="submit" 
-                                            class="daily 
-                                            {% if current_year > today.year or (current_year == today.year and day > today) %}
-                                                disabled
-                                            {% elif habit.log_dict.get(day) == true %}
-                                                done
-                                            {% elif habit.log_dict.get(day) == false %}
-                                                not-done
-                                            {% else %}
-                                                empty
-                                            {% endif %}"
-                                            {% if current_year > today.year or (current_year == today.year and day > today) %}disabled{% endif %}
-                                            title="{{ day.strftime('%A, %B %d, %Y') }}"
-                                        ></button>
-                                    </form>
-                                {% else %}
-                                    <div class="daily disabled"></div>
-                                {% endif %}
-                            {% endfor %}
-                        </div>
-                    {% endfor %}
-                </div>
+        <div class="habit-header">
+            <div class="habit-icon">📅</div>
+            <div>
+                <h2 class="habit-title">{{ habit.name }}</h2>
+                {% if habit.description %}
+                <p class="habit-description">{{ habit.description }}</p>
+                {% endif %}
             </div>
         </div>
-        {% endfor %}
+
+        <div class="habit-grid-wrapper">
+            <div class="habit-grid">
+                {% for week in week_columns %}
+                <div class="daily-column">
+                    {% for day in week %}
+                    {% if day %}
+                    <form action="/toggle_habit_log" method="post" style="margin: 0;">
+                        <input type="hidden" name="habit_id" value="{{ habit.id }}">
+                        <input type="hidden" name="date" value="{{ day.strftime('%Y-%m-%d') }}">
+                        <button type="submit" 
+                                class="daily {% if day in habit.log_dict %}{% if habit.log_dict[day] %}done{% else %}not-done{% endif %}{% else %}empty{% endif %}"
+                                title="{{ day.strftime('%A, %B %d, %Y') }}">
+                        </button>
+                    </form>
+                    {% else %}
+                    <div class="daily disabled"></div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
     </div>
+    {% endfor %}
+</div>
+
 {% endblock %}
