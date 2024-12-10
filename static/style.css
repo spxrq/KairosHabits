@@ -12,25 +12,20 @@ h1 {
 /* Calendar Layout */
 .calendar {
     display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 15px;
+    flex-direction: column;
+    align-items: center;
     max-width: 1200px;
     margin: 0 auto;
+    padding: 20px;
 }
 
-/* Life Grid */
-.life-grid {
-    display: grid;
-    grid-template-rows: repeat(80, auto);
-    gap: 3px;
-}
-
+/* Year Row Container */
 .year-row {
     display: grid;
     grid-template-columns: repeat(52, 12px);
     gap: 2px;
+    width: fit-content;
+    margin: 2px 0;
 }
 
 /* Week Boxes */
@@ -77,8 +72,9 @@ h1 {
 }
 
 .decade-break {
-    flex-basis: 100%;
+    width: 100%;
     height: 20px;
+    margin: 10px 0;
 }
 
 /* Year Navigation */
@@ -283,6 +279,16 @@ h1 {
     .daily, .daily.disabled {
         --box-size: 1.25rem;
     }
+    
+    .year-row {
+        grid-template-columns: repeat(52, 10px);
+        gap: 1px;
+    }
+    
+    .week {
+        width: 10px;
+        height: 10px;
+    }
 }
 
 @media (max-width: 992px) {
@@ -292,6 +298,15 @@ h1 {
     
     .day-label {
         font-size: 0.7rem;
+    }
+    
+    .year-row {
+        grid-template-columns: repeat(52, 8px);
+    }
+    
+    .week {
+        width: 8px;
+        height: 8px;
     }
 }
 
@@ -311,6 +326,15 @@ h1 {
     
     .card {
         margin: 0.5rem;
+    }
+    
+    .year-row {
+        grid-template-columns: repeat(52, 6px);
+    }
+    
+    .week {
+        width: 6px;
+        height: 6px;
     }
 }
 
