@@ -347,6 +347,25 @@ def habits():
             current_year=current_year
         )
 
+
+@app.route("/update_habit_name", methods=["POST"])
+@login_required
+def update_habit_name():
+    habit_id = request.form.get("habit_id")
+    new_name = request.form.get("name")
+
+    if not habit_id or not new_name:
+        return apology("Invalid habit or name", 400)
+
+    habit = Habit.query.filter_by(id=habit_id, user_id=session["user_id"]).first()
+    if not habit:
+        return apology("Invalid habit", 403)
+
+    habit.name = new_name
+    db.session.commit()
+
+    return redirect("/habits")
+
     
 @app.route("/delete_habit", methods=["POST"])
 @login_required

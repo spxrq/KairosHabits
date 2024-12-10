@@ -2,59 +2,83 @@
 {% block title %}Habits{% endblock %}
 {% block main %}
 
-<div class="mb-3">
-    <h2>Create Habit</h2>
-    <form action="/habits" method="post">
-        <input type="text" name="name" placeholder="Habit Name" required>
-        <textarea name="description" placeholder="Description (optional)"></textarea>
-        <button type="submit">Create</button>
-    </form>
-</div>
-
-<div class="year-navigation">
-    <a href="/habits?year={{ current_year - 1 }}" class="btn">← {{ current_year - 1 }}</a>
-    <span class="current-year">{{ current_year }}</span>
-    <a href="/habits?year={{ current_year + 1 }}" class="btn">{{ current_year + 1 }} →</a>
-</div>
-
-<div class="habit-cards">
-    {% for habit in habits %}
-    <div class="habit-card" style="background-color: {{ habit.background_color }};">
-        <form action="/delete_habit" method="post" class="delete-habit-form">
-            <input type="hidden" name="habit_id" value="{{ habit.id }}">
-            <button type="submit" class="delete-habit-btn">×</button>
+<!-- Create Habit Section -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h2 class="card-title mb-3">Create New Habit</h2>
+        <form action="/habits" method="post" class="row g-3">
+            <div class="col-md-6">
+                <input type="text" class="form-control" name="name" placeholder="Habit Name" required>
+            </div>
+            <div class="col-md-6">
+                <input type="text" class="form-control" name="description" placeholder="Description (optional)">
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">Create Habit</button>
+            </div>
         </form>
+    </div>
+</div>
 
-        <div class="habit-header">
-            <div class="habit-icon">📅</div>
-            <div>
-                <h2 class="habit-title">{{ habit.name }}</h2>
+<!-- Year Navigation -->
+<div class="d-flex justify-content-center align-items-center mb-4">
+    <a href="/habits?year={{ current_year - 1 }}" class="btn btn-outline-primary">← {{ current_year - 1 }}</a>
+    <span class="mx-4 h3 mb-0">{{ current_year }}</span>
+    <a href="/habits?year={{ current_year + 1 }}" class="btn btn-outline-primary">{{ current_year + 1 }} →</a>
+</div>
+
+<!-- Habits List -->
+<div class="habits-container">
+    {% for habit in habits %}
+    <div class="card mb-4" style="background-color: {{ habit.background_color }};">
+        <div class="card-body">
+            <!-- Delete Button -->
+            <form action="/delete_habit" method="post" class="position-absolute top-0 end-0 mt-2 me-2">
+                <input type="hidden" name="habit_id" value="{{ habit.id }}">
+                <button type="submit" class="btn-close" aria-label="Delete habit"></button>
+            </form>
+            
+            <!-- Habit Name -->
+            <div class="habit-header mb-3">
+                <form action="/update_habit_name" method="post" class="mb-0">
+                    <input type="hidden" name="habit_id" value="{{ habit.id }}">
+                    <input type="text" 
+                           name="name" 
+                           value="{{ habit.name }}" 
+                           class="form-control-plaintext habit-title h4 mb-0"
+                           style="background: transparent;">
+                </form>
                 {% if habit.description %}
-                <p class="habit-description">{{ habit.description }}</p>
+                <p class="text-muted mb-0 mt-1">{{ habit.description }}</p>
                 {% endif %}
             </div>
-        </div>
 
-        <div class="habit-grid-wrapper">
+            <!-- Habit Grid -->
             <div class="habit-grid">
-                {% for week in week_columns %}
-                <div class="daily-column">
-                    {% for day in week %}
-                    {% if day %}
-                    <form action="/toggle_habit_log" method="post" style="margin: 0;">
-                        <input type="hidden" name="habit_id" value="{{ habit.id }}">
-                        <input type="hidden" name="date" value="{{ day.strftime('%Y-%m-%d') }}">
-                        <button type="submit" 
-                                class="daily {% if day in habit.log_dict %}{% if habit.log_dict[day] %}done{% else %}not-done{% endif %}{% else %}empty{% endif %}"
-                                title="{{ day.strftime('%A, %B %d, %Y') }}">
-                        </button>
-                    </form>
-                    {% else %}
-                    <div class="daily disabled"></div>
-                    {% endif %}
+                {% for day_label in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}
+                <div class="day-label">{{ day_label }}</div>
+                {% endfor %}
+                
+                <div class="habit-grid-wrapper">
+                    {% for week in week_columns %}
+                    <div class="daily-column">
+                        {% for day in week %}
+                        {% if day %}
+                        <form action="/toggle_habit_log" method="post">
+                            <input type="hidden" name="habit_id" value="{{ habit.id }}">
+                            <input type="hidden" name="date" value="{{ day }}">
+                            <button type="submit" 
+                                    class="daily {% if day in habit.log_dict %}{% if habit.log_dict[day] %}done{% else %}not-done{% endif %}{% else %}empty{% endif %}"
+                                    title="{{ day.strftime('%Y-%m-%d') }}">
+                            </button>
+                        </form>
+                        {% else %}
+                        <div class="daily disabled"></div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
                     {% endfor %}
                 </div>
-                {% endfor %}
             </div>
         </div>
     </div>

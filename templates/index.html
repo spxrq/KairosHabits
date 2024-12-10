@@ -1,32 +1,30 @@
 {% extends "layout.html" %}
-
-{% block title %}
-    Memento Mori
-{% endblock %}
-
+{% block title %}Home{% endblock %}
 {% block main %}
-<div class="calendar-container">
-    <h1>MEMENTO MORI</h1>
+
+<div class="container">
+    <div class="text-center mb-4">
+        <h1>Your Life in Weeks</h1>
+        <p>You've lived {{ weeks_lived }} weeks out of {{ total_weeks }} weeks</p>
+    </div>
+
     <div class="calendar">
-        {% for i in range(0, total_weeks, 52) %}
-            {% if i % 520 == 0 and i != 0 %}
-                <div class="decade-break"></div>
-            {% endif %}
+        {% for year in range(80) %}
             <div class="year-row">
-                {% for j in range(52) %}
-                    {% set week = weeks_data[i + j] %}
-                    <div class="week tooltip" 
-                         style="background-color: {{ week.color }};"
-                         title="Week of {{ week.start_date.strftime('%Y-%m-%d') }}
-                         {% if week.is_post_registration and week.lived %}
-                         {% set color = week.color.strip('rgb()').split(',') %}
-                         {% set percentage = (255 - color[0]|int) / 255 * 100 %}
-                         Habit Completion: {{ '%.1f'|format(percentage) }}%
-                         {% endif %}">
+                {% for week in range(52) %}
+                    {% set week_index = year * 52 + week %}
+                    {% set week_data = weeks_data[week_index] %}
+                    <div class="week {% if week_data.lived %}{% if week_data.is_post_registration %}lived-tracked{% else %}lived{% endif %}{% endif %}"
+                         style="{% if week_data.is_post_registration and week_data.lived %}background-color: {{ week_data.color }};{% endif %}"
+                         title="Week {{ week_index + 1 }}&#10;{{ week_data.start_date.strftime('%Y-%m-%d') }} to {{ week_data.end_date.strftime('%Y-%m-%d') }}">
                     </div>
                 {% endfor %}
             </div>
-        {% endfor %}
-    </div>
+            {% if (year + 1) % 10 == 0 %}
+                <div class="decade-break"></div>
+            {% endif %}
+        </div>
+    {% endfor %}
 </div>
-{% endblock %}v
+
+{% endblock %}
