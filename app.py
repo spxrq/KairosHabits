@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime, timedelta, date
-from random import choice
+from random import choice, random
 
 from helpers import apology, login_required
 
@@ -65,6 +65,49 @@ def login():
     else:
         return render_template("login.html")
 
+
+def backfill_habit_data(user_id):
+    """Backfill habit data for user with ID 1 starting from 2017"""
+    if user_id != 1:
+        return
+        
+    user = User.query.get(1)
+    if not user:
+        return
+        
+    # Set registration date to 2017
+    new_registration_date = date(2017, 1, 1)
+    user.registration_date = new_registration_date
+    
+    # Get all habits for the user
+    habits = Habit.query.filter_by(user_id=1).all()
+    
+    # Generate all dates from 2017 to now
+    start_date = new_registration_date
+    end_date = date.today()
+    delta = end_date - start_date
+    dates = [start_date + timedelta(days=i) for i in range(delta.days + 1)]
+    
+    # Delete existing logs for these habits
+    for habit in habits:
+        HabitLog.query.filter(HabitLog.habit_id == habit.id).delete()
+    
+    # Create new logs with 70% probability of being True
+    for habit in habits:
+        new_logs = []
+        for log_date in dates:
+            done = random() < 0.7  # 70% chance of being True
+            log = HabitLog(
+                date=log_date,
+                done=done,
+                habit_id=habit.id
+            )
+            new_logs.append(log)
+        db.session.bulk_save_objects(new_logs)
+    
+    db.session.commit()
+
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
     """Register user"""
@@ -113,10 +156,26 @@ def register():
         # Remember which user has logged in
         session["user_id"] = user.id
 
+        # If this is user ID 1, set up habits and backfill their data
+        if user.id == 1:
+            setup_and_backfill_user_one()
+
         # Redirect user to home page
         return redirect("/")
     else:
         return render_template("register.html")
+
+
+# Add a new route to trigger backfill manually (optional)
+@app.route("/backfill", methods=["POST"])
+@login_required
+def backfill():
+    """Manually trigger backfill for user 1"""
+    if session["user_id"] != 1:
+        return apology("unauthorized", 403)
+    
+    backfill_habit_data(1)
+    return redirect("/habits")
 
 
 @app.route("/logout")
@@ -267,6 +326,61 @@ def generate_background_color():
     return choice(colors)
 
 
+def setup_and_backfill_user_one():
+    """Set up three habits for user 1 and backfill their data from 2017"""
+    user = User.query.get(1)
+    if not user:
+        return
+        
+    # Set registration date to 2017
+    new_registration_date = date(2017, 1, 1)
+    user.registration_date = new_registration_date
+    
+    # Delete existing habits and their logs
+    Habit.query.filter_by(user_id=1).delete()
+    
+    # Create three habits
+    habits_to_create = [
+        {"name": "Stretching", "color": "#AF7AC5"},
+        {"name": "Running", "color": "#48C9B0"},
+        {"name": "Reading", "color": "#5DADE2"}
+    ]
+    
+    created_habits = []
+    for habit_data in habits_to_create:
+        habit = Habit(
+            name=habit_data["name"],
+            description="",
+            background_color=habit_data["color"],
+            user_id=1
+        )
+        db.session.add(habit)
+        created_habits.append(habit)
+    
+    db.session.commit()
+    
+    # Generate all dates from 2017 to now
+    start_date = new_registration_date
+    end_date = date.today()
+    delta = end_date - start_date
+    dates = [start_date + timedelta(days=i) for i in range(delta.days + 1)]
+    
+    # Create logs for each habit
+    for habit in created_habits:
+        new_logs = []
+        for log_date in dates:
+            done = random() < 0.7  # 70% chance of being True
+            log = HabitLog(
+                date=log_date,
+                done=done,
+                habit_id=habit.id
+            )
+            new_logs.append(log)
+        db.session.bulk_save_objects(new_logs)
+    
+    db.session.commit()
+
+
 @app.route("/habits", methods=["GET", "POST"])
 @login_required
 def habits():
@@ -283,6 +397,11 @@ def habits():
                       user_id=session["user_id"])
         db.session.add(habit)
         db.session.commit()
+
+        # After creating a new habit, if it's user 1 and they have no habits yet
+        if session["user_id"] == 1 and len(Habit.query.filter_by(user_id=1).all()) == 0:
+            setup_and_backfill_user_one()
+
         return redirect("/habits")
 
     else:
