@@ -156,9 +156,8 @@ def register():
         # Remember which user has logged in
         session["user_id"] = user.id
 
-        # If this is user ID 1, set up habits and backfill their data
-        if user.id == 1:
-            setup_and_backfill_user_one()
+        # If this is user ID 1, backfill their habit data
+        backfill_habit_data(user.id)
 
         # Redirect user to home page
         return redirect("/")
@@ -281,7 +280,8 @@ def index():
                          user=user,
                          weeks_data=weeks_data, 
                          weeks_lived=weeks_lived,
-                         total_weeks=total_weeks)
+                         total_weeks=total_weeks,
+                         today=date.today())
 
 
 def calculate_weeks_lived(birthdate):
@@ -369,7 +369,7 @@ def setup_and_backfill_user_one():
     for habit in created_habits:
         new_logs = []
         for log_date in dates:
-            done = random() < 0.7  # 70% chance of being True
+            done = random.random() < 0.7  # 70% chance of being True
             log = HabitLog(
                 date=log_date,
                 done=done,
@@ -463,7 +463,8 @@ def habits():
             "habits.html",
             habits=habits,
             week_columns=week_columns,
-            current_year=current_year
+            current_year=current_year,
+            today=date.today()
         )
 
 
@@ -530,3 +531,82 @@ def toggle_habit_log():
 
     db.session.commit()
     return redirect(f"/habits?year={date.year}")
+
+
+def calculate_habit_stats(habit):
+    """Calculate statistics for a given habit"""
+    today = date.today()
+    logs = HabitLog.query.filter_by(habit_id=habit.id).order_by(HabitLog.date).all()
+    
+    if not logs:
+        return {
+            'total_days': 0,
+            'completed_days': 0,
+            'completion_rate': 0,
+            'current_streak': 0,
+            'longest_streak': 0,
+            'last_30_days': 0
+        }
+    
+    # Basic counts
+    completed_logs = [log for log in logs if log.done]
+    total_days = len(logs)
+    completed_days = len(completed_logs)
+    completion_rate = (completed_days / total_days * 100) if total_days > 0 else 0
+    
+    # Calculate streaks
+    current_streak = 0
+    longest_streak = 0
+    temp_streak = 0
+    
+    # Sort logs by date for streak calculation
+    sorted_logs = sorted(logs, key=lambda x: x.date, reverse=True)
+    
+    # Calculate current streak
+    for log in sorted_logs:
+        if log.done:
+            current_streak += 1
+        else:
+            break
+            
+    # Calculate longest streak
+    for log in sorted(logs, key=lambda x: x.date):
+        if log.done:
+            temp_streak += 1
+            longest_streak = max(longest_streak, temp_streak)
+        else:
+            temp_streak = 0
+            
+    # Calculate last 30 days completion rate
+    thirty_days_ago = today - timedelta(days=30)
+    recent_logs = [log for log in logs if log.date >= thirty_days_ago]
+    completed_recent = len([log for log in recent_logs if log.done])
+    last_30_days_rate = (completed_recent / len(recent_logs) * 100) if recent_logs else 0
+    
+    return {
+        'total_days': total_days,
+        'completed_days': completed_days,
+        'completion_rate': round(completion_rate, 1),
+        'current_streak': current_streak,
+        'longest_streak': longest_streak,
+        'last_30_days': round(last_30_days_rate, 1)
+    }
+
+@app.route("/stats")
+@login_required
+def stats():
+    """Show habit statistics"""
+    user = User.query.get(session["user_id"])
+    if user is None:
+        return redirect("/login")
+        
+    habits = Habit.query.filter_by(user_id=user.id).all()
+    
+    # Calculate statistics for each habit
+    habits_stats = {}
+    for habit in habits:
+        habits_stats[habit.id] = calculate_habit_stats(habit)
+    
+    return render_template("stats.html", 
+                         habits=habits,
+                         habits_stats=habits_stats)

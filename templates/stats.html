@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Statistics
+{% endblock %}
+
+{% block main %}
+<div class="container">
+    <h2 class="text-center mb-4">Habit Statistics</h2>
+    
+    <div class="row">
+        {% for habit in habits %}
+        <div class="col-md-6 mb-4">
+            <div class="card" style="border-left: 5px solid {{ habit.background_color }};">
+                <div class="card-body">
+                    <h5 class="card-title">{{ habit.name }}</h5>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <h6>Overall Completion Rate</h6>
+                            <p class="stats-number">{{ habits_stats[habit.id]['completion_rate'] }}%</p>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <h6>Current Streak</h6>
+                            <p class="stats-number">{{ habits_stats[habit.id]['current_streak'] }} days</p>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <h6>Longest Streak</h6>
+                            <p class="stats-number">{{ habits_stats[habit.id]['longest_streak'] }} days</p>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <h6>Last 30 Days</h6>
+                            <p class="stats-number">{{ habits_stats[habit.id]['last_30_days'] }}%</p>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <h6>Total Days Tracked</h6>
+                            <p class="stats-number">{{ habits_stats[habit.id]['total_days'] }} days</p>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <h6>Days Completed</h6>
+                            <p class="stats-number">{{ habits_stats[habit.id]['completed_days'] }} days</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

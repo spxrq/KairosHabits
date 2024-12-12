@@ -51,6 +51,13 @@ h1 {
     border: 1px solid #003f7f;
 }
 
+/* Current week highlighting */
+.week.current-week {
+    border: 2px solid #F39C12;
+    box-shadow: 0 0 4px #F39C12;
+    z-index: 2;
+}
+
 /* Tooltip styling */
 .tooltip {
     position: relative;
@@ -235,6 +242,13 @@ h1 {
     cursor: default;
 }
 
+/* Current day highlighting */
+.daily.current-day {
+    border: 2px solid #F39C12;
+    box-shadow: 0 0 4px #F39C12;
+    z-index: 2;
+}
+
 /* Delete Button */
 .delete-habit-form {
     position: absolute;
@@ -272,6 +286,39 @@ h1 {
 
 .card-body {
     padding: 1.5rem;
+}
+
+/* Statistics Page Styling */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 1rem;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    transition: transform 0.2s;
+}
+
+.stat-item:hover {
+    transform: translateY(-2px);
+}
+
+.stat-item h6 {
+    color: #666;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.stats-number {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 0;
+    color: #333;
 }
 
 /* Responsive Adjustments */
@@ -335,6 +382,11 @@ h1 {
     .week {
         width: 6px;
         height: 6px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
     }
 }
 
