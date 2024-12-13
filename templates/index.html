@@ -7,6 +7,14 @@
         <p>You've lived {{ weeks_lived }} weeks out of {{ total_weeks }} weeks</p>
     </div>
 
+    <!-- The quote section -->
+    <div class="quote-container mb-4">
+        <blockquote class="blockquote">
+            <p class="mb-0">{{ quote.text }}</p>
+            <footer class="blockquote-footer mt-2">{{ quote.author }}</footer>
+        </blockquote>
+    </div>
+
     <div class="calendar">
         {% for year in range(80) %}
             <div class="year-row">

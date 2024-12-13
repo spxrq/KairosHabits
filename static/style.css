@@ -404,3 +404,74 @@ h1 {
 footer {
     box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
 }
+
+
+/* Add these styles to your style.css file */
+
+.quote-container {
+    max-width: 800px;
+    margin: 2rem auto 3rem;
+    padding: 1.5rem;
+    text-align: center;
+    position: relative;
+}
+
+.quote-container blockquote {
+    font-size: 1.25rem;
+    color: #333;
+    margin: 0;
+    padding: 0.5rem 3rem;
+    position: relative;
+    line-height: 1.6;
+}
+
+/* Add quotation marks */
+.quote-container blockquote::before,
+.quote-container blockquote::after {
+    content: '"';
+    font-family: Georgia, serif;
+    font-size: 4rem;
+    color: #4169E1;
+    opacity: 0.3;
+    position: absolute;
+    height: 2rem;
+    line-height: 1;
+}
+
+.quote-container blockquote::before {
+    left: 0;
+    top: -1rem;
+}
+
+.quote-container blockquote::after {
+    right: 0;
+    bottom: -1rem;
+}
+
+.quote-container .blockquote-footer {
+    color: #666;
+    font-size: 1rem;
+    margin-top: 1rem;
+    font-style: italic;
+}
+
+.quote-container .blockquote-footer::before {
+    content: "— ";
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .quote-container {
+        padding: 1rem;
+    }
+    
+    .quote-container blockquote {
+        font-size: 1.1rem;
+        padding: 0.5rem 2rem;
+    }
+    
+    .quote-container blockquote::before,
+    .quote-container blockquote::after {
+        font-size: 3rem;
+    }
+}

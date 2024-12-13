@@ -11,6 +11,8 @@ from random import choice, random
 from helpers import apology, login_required
 
 from models import *
+from quotes import StoicQuotes
+
 
 app = Flask(__name__)
 
@@ -259,6 +261,9 @@ def get_week_data(birthdate, registration_date, habits):
     
     return weeks_data
 
+# Initialize quotes
+quotes = StoicQuotes()
+
 @app.route("/")
 @login_required
 def index():
@@ -276,12 +281,16 @@ def index():
     total_weeks = 80 * 52
     weeks_lived = sum(1 for week in weeks_data if week['lived'])
 
+    # Get a random quote
+    daily_quote = quotes.get_random_quote()
+
     return render_template("index.html", 
                          user=user,
                          weeks_data=weeks_data, 
                          weeks_lived=weeks_lived,
                          total_weeks=total_weeks,
-                         today=date.today())
+                         today=date.today(),
+                         quote=quotes.get_random_quote())
 
 
 def calculate_weeks_lived(birthdate):
